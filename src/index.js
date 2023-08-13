@@ -66,12 +66,13 @@ function handlerForm(evt) {
   getPhoto(data, page, perPage)
     .then(resp => {
       const { hits, totalHits } = resp;
-      console.log(hits);
+      console.log(totalHits);
       if (totalHits === 0) {
         Notify.failure(
-          ('Sorry, there are no images matching your search query. Please try again.',
-          paramsNotify)
+          'Sorry, there are no images matching your search query. Please try again.',
+          paramsNotify
         );
+        console.log('ER');
         return;
       } else {
         Notify.info(`Hooray! We found ${totalHits} images.`, paramsNotify);
