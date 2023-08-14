@@ -26,30 +26,34 @@ let page = 1;
 
 loadBtn.classList.add('is-hidden');
 
-async function getPhoto(data, page, perPage) {
+const getPhoto = async (data, page, perPage) => {
   const BASE_URL = 'https://pixabay.com/api/';
   const API_KEY = '38674668-fb5d0e9be0babef905868f38f';
-  console.log(data);
-  if (data) {
-    const params = new URLSearchParams({
-      key: API_KEY,
-      q: data,
-      image_type: 'photo',
-      orientation: 'horizontal',
-      safesearch: 'true',
-      page: page,
-      per_page: perPage,
-    });
-    const resp = (await axios.get(`${BASE_URL}?${params}`)).data;
+
+  const params = new URLSearchParams({
+    key: API_KEY,
+    q: data,
+    image_type: 'photo',
+    orientation: 'horizontal',
+    safesearch: 'true',
+    page: page,
+    per_page: perPage,
+  });
+
+  try {
+    const resp = await axios.get(`${BASE_URL}?${params}`);
     console.log(resp);
-    return resp;
-  } else {
+    return resp.data;
+  } catch (error) {
     return onFetchError();
   }
-}
+};
 
 function handlerForm(evt) {
+  loadBtn.addEventListener('click', onClickLoadMore);
+
   evt.preventDefault();
+
   gallery.innerHTML = '';
   page = 1;
   if (evt.currentTarget.elements.searchQuery.value === '') {
@@ -66,17 +70,16 @@ function handlerForm(evt) {
   getPhoto(data, page, perPage)
     .then(resp => {
       const { hits, totalHits } = resp;
-      console.log(totalHits);
+
       if (totalHits === 0) {
         Notify.failure(
           'Sorry, there are no images matching your search query. Please try again.',
           paramsNotify
         );
-        console.log('ER');
         return;
       } else {
         Notify.info(`Hooray! We found ${totalHits} images.`, paramsNotify);
-        gallery.innerHTML = createMarkup(hits);
+        gallery.insertAdjacentHTML('beforeend', createMarkup(hits));
         lightbox.refresh();
       }
       if (totalHits > perPage) {
@@ -85,17 +88,13 @@ function handlerForm(evt) {
     })
     .catch(onFetchError);
 
-  loadBtn.addEventListener('click', onClickLoadMore);
-
   function onClickLoadMore() {
-    gallery.innerHTML = '';
     page += 1;
     getPhoto(data, page, perPage)
       .then(resp => {
         const searchResults = resp.hits;
-        console.log(searchResults);
         const numberOfPage = Math.ceil(resp.totalHits / perPage);
-        gallery.innerHTML = createMarkup(searchResults);
+        gallery.insertAdjacentHTML('beforeend', createMarkup(searchResults));
         if (page === numberOfPage) {
           loadBtn.classList.add('is-hidden');
           Notify.info(
