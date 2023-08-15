@@ -23,13 +23,14 @@ searchForm.addEventListener('submit', handlerForm);
 
 const perPage = 40;
 let page = 1;
+let data = '';
 
 loadBtn.classList.add('is-hidden');
 
 const getPhoto = async (data, page, perPage) => {
   const BASE_URL = 'https://pixabay.com/api/';
   const API_KEY = '38674668-fb5d0e9be0babef905868f38f';
-
+  console.log(data);
   const params = new URLSearchParams({
     key: API_KEY,
     q: data,
@@ -50,8 +51,6 @@ const getPhoto = async (data, page, perPage) => {
 };
 
 function handlerForm(evt) {
-  loadBtn.addEventListener('click', onClickLoadMore);
-
   evt.preventDefault();
 
   gallery.innerHTML = '';
@@ -60,7 +59,7 @@ function handlerForm(evt) {
     Notify.info('Enter your request, please!', paramsNotify);
     return;
   }
-  const data = new FormData(evt.currentTarget)
+  data = new FormData(evt.currentTarget)
     .get('searchQuery')
     .trim()
     .toLowerCase()
@@ -88,26 +87,27 @@ function handlerForm(evt) {
     })
     .catch(onFetchError);
 
-  function onClickLoadMore() {
-    page += 1;
-    getPhoto(data, page, perPage)
-      .then(resp => {
-        const searchResults = resp.hits;
-        const numberOfPage = Math.ceil(resp.totalHits / perPage);
-        gallery.insertAdjacentHTML('beforeend', createMarkup(searchResults));
-        if (page === numberOfPage) {
-          loadBtn.classList.add('is-hidden');
-          Notify.info(
-            "We're sorry, but you've reached the end of search results.",
-            paramsNotify
-          );
-          loadBtn.removeEventListener('click', onClickLoadMore);
-        }
-        lightbox.refresh();
-      })
-      .catch(onFetchError);
-  }
+  loadBtn.addEventListener('click', onClickLoadMore);
   evt.currentTarget.reset();
+}
+
+function onClickLoadMore() {
+  page += 1;
+  getPhoto(data, page, perPage)
+    .then(resp => {
+      const searchResults = resp.hits;
+      const numberOfPage = Math.ceil(resp.totalHits / perPage);
+      gallery.insertAdjacentHTML('beforeend', createMarkup(searchResults));
+      if (page === numberOfPage) {
+        loadBtn.classList.add('is-hidden');
+        Notify.info(
+          "We're sorry, but you've reached the end of search results.",
+          paramsNotify
+        );
+      }
+      lightbox.refresh();
+    })
+    .catch(onFetchError);
 }
 
 function createMarkup(arr) {
